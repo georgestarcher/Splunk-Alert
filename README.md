@@ -11,7 +11,7 @@
 
 The combination of the credentialsFromSplunk.py, gsheet.py and alert_to_gsheet.py will function if properly configured with Splunk. It is meant as a demonstration of sending Splunk alert detail data to a system external to Splunk.
 
-The combination of the credentialsFromSplunk.py, targetlist.py and alert_cscript.py can work to control a network IPS if you provide the interfacing Python class to make the matching IPS Rest API calls. 
+The combination of the credentialsFromSplunk.py, targetlist.py and alert_script.py can work to control a network IPS if you provide the interfacing Python class to make the matching IPS Rest API calls. 
 
 This code is meant to go along with the explanation on my personal blog at georgestarcher.com.
 

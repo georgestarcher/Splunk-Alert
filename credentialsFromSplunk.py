@@ -28,6 +28,7 @@ class credential:
 
 	def getPassword(self, sessionkey):
         	import splunk.entity as entity
+		import urllib
 
 		if len(sessionkey) == 0:
 			raise Exception, "No session key provided"
@@ -36,8 +37,9 @@ class credential:
 		if len(self.app) == 0:
 			raise Exception, "No app provided"
 		
-		# clip the session= text off the session key information sent in via stdio when Splunk calls a script
-		sessionKey = sessionkey[11:]
+                # clip the session= text off the session key information sent in via stdio when Splunk calls a script
+                # added urldecode of the session key. an addition in Splunk v6.X
+                sessionKey = urllib.unquote(sessionkey[11:]).decode('utf8')
 
         	try:
         	# list all credentials
@@ -70,6 +72,6 @@ def main():
 if __name__ == "__main__":
 	"""You will get an error on importing the Splunk entity class if not run via the Splunk context
 		try $SPLUNK_PATH/bin/splunk cmd python credentials.py
-		You will still get an error without a valid session key so just expect an error when testiny by hand
+		You will still get an error without a valid session key so just expect an error when testing by hand
 	"""
 	main()
