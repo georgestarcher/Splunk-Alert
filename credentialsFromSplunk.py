@@ -37,10 +37,6 @@ class credential:
 		if len(self.app) == 0:
 			raise Exception, "No app provided"
 		
-                # clip the session= text off the session key information sent in via stdio when Splunk calls a script
-                # added urldecode of the session key. an addition in Splunk v6.X
-                sessionKey = urllib.unquote(sessionkey[11:]).decode('utf8')
-
         	try:
         	# list all credentials
                 	entities = entity.getEntities(['admin', 'passwords'], namespace=self.app, owner='nobody', sessionKey=sessionKey)

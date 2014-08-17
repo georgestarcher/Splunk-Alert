@@ -3,7 +3,8 @@
 import os
 import sys
 from credentialsFromSplunk import *
-import logging
+import logging as logger
+import time
 from gsheet import spreadsheet
 
 __author__ = "george@georgestarcher.com (George Starcher)"
@@ -17,42 +18,52 @@ _SYS_EXIT_FAILED_TARGET_FILE = 9
 #OUTPUT OPTIONS
 _DEBUG = 0 
 
-# Set up logging suitable for splunkd consumption
-logging.root
-logging.root.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(levelname)s %(message)s')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-logging.root.addHandler(handler)
-
-# OPTIONAL DEBUG OUTPUT FILE
+# Setup Alert Script Logging File: will be picked up into index=_internal
 os.umask(0)
-if _DEBUG:
-	outputFileDebug = '/opt/splunk/var/log/splunk/'+_MI_APP_NAME+'-debug.txt'
-	debugFile = open(outputFileDebug, 'w')
+outputFileName = _MI_APP_NAME+'-log.txt'
+outputFileLog = os.path.join(os.environ['SPLUNK_HOME'],'var','log','splunk',outputFileName)
+logger.basicConfig(format='%(asctime)s %(levelname)s %(message)s', filename=outputFileLog, filemode='a+', level=logger.INFO, datefmt='%Y-%m-%d %H:%M:%S %z')
+logger.Formatter.converter = time.gmtime
 
 # Functions
 
-def doPrint(s):
-	""" A wrapper Function to output data by same method (print vs sys.stdout.write)"""
-    	sys.stdout.write(s+"\r\n")
-	if _DEBUG:
-		debugFile.write(s+"\r\n")
-    
-def print_error(s):
-	""" print any errors that occur """
-	doPrint("<error><message>%s</message></error>" % str(s))
-	logging.error(s)
+def versiontuple(v):
+        return tuple(map(int, (v.split("."))))
+
+def logDebug(s):
+        """ print any extra debug info """
+        if _DEBUG:
+                logger.info("script="+_MI_APP_NAME+" %s" % str(s))
+
+def logError(s):
+        """ print any errors that occur """
+        logger.error("script="+_MI_APP_NAME+" %s" % str(s))
 
 def logAction(s):
-	""" option action logging """
-	doPrint(s)
-	if _LOG_ACTION:
-		outputFileAction.write(s+"\r\n")
+        """ log events to show normal activity of the alert script """
+        if _LOG_ACTION:
+                logger.info("script="+_MI_APP_NAME+" %s" % str(s))
+
+def getSplunkVersion(sessionKey):
+        """ function to obtain the Splunk software version. This is used to determine parsing of the sessionKey """
+
+        from xml.dom import minidom
+
+        base_url = 'https://localhost:8089'
+
+        request = urllib2.Request(base_url + '/services/server/info',None,headers = { 'Authorization': ('Splunk %s' %sessionKey)})
+        server_content = urllib2.urlopen(request)
+        serverDoc = minidom.parseString(server_content.read())
+        entryInfo = serverDoc.getElementsByTagName('entry')
+        key_nodes = entryInfo[0].getElementsByTagName('content')[0].getElementsByTagName('s:key')
+        nodes = filter(lambda node: node.attributes['name'].value == 'version', key_nodes)
+        version = nodes[0].firstChild.nodeValue
+
+        return(version)
 
 def exitAlertScript(a):
 	if _DEBUG:
-		doPrint("Stopping: "+_MI_APP_NAME)
+		logDebug("Stopping: "+_MI_APP_NAME)
 		outputFileDebug.close()
 	if _LOG_ACTION:
 		outputFileAction.close()
@@ -61,7 +72,7 @@ def exitAlertScript(a):
 if __name__ == "__main__":
 
 	if _DEBUG:
-		doPrint("Starting: "+_MI_APP_NAME)
+		logDebug("action=started")
 
 # Define the source in Splunk for the stored credential
 
@@ -76,10 +87,19 @@ if __name__ == "__main__":
         sessionKey = sys.stdin.readline().strip()
 
         if len(sessionKey) == 0:
-        	print_error("Did not receive a session key from splunkd. ")
+        	logError("Did not receive a session key from splunkd. ")
 		exitAlertScript(_SYS_EXIT_FAILED_SPLUNK_AUTH)
 
-	doPrint("session key: "+sessionKey)
+# Adjust the returned sessionKey text based on Splunk version
+
+        splunkVersion = getSplunkVersion(sessionKey)
+        if versiontuple(splunkVersion) < versiontuple("6.1.2"):
+                sessionKey = sessionKey[11:]
+        else:
+                sessionKey = urllib.unquote(sessionKey[11:]).decode('utf8')
+
+        logDebug("sessionKey="+sessionKey)
+        logDebug("splunkVersion="+splunkVersion)
 
 # Define the Google credential
 
@@ -90,14 +110,14 @@ if __name__ == "__main__":
 	try:
 		googleCredential.getPassword(sessionKey)
 	except Exception, e:
-		print_error("Splunk Credential Error: %s" % str(e))
+		logError("Splunk Credential Error: %s" % str(e))
 		exitAlertScript(_SYS_EXIT_FAILED_SPLUNK_AUTH)
 
 # Active the Google Spreadsheet connection object	
 	try:
 		alert_spreadsheet = spreadsheet(googleCredential.username, googleCredential.password,spreadsheet_name)
 	except Exception, e:
-	        print_error("Google Error: %s" % str(e))
+	        logError("Google Error: %s" % str(e))
 		exitAlertScript(_SYS_EXIT_FAILED_TP)	
 
 # Upload the results to the Google Spreadsheet 
@@ -107,7 +127,7 @@ if __name__ == "__main__":
 	try:
 		alert_spreadsheet.loadData(alertEventsFile)
 	except Exception, e:
-		print_error("Target File Error: %s" % str(e))
+		logError("Target File Error: %s" % str(e))
 		exitAlertScript(_SYS_EXIT_FAILED_TARGET_FILE)
 
 	exitAlertScript(0)
