@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
         ipsCredential = credential(splunkapp,realm,username)
         policy_name = "Quarantine SSH Attempts"
-	ips_ip = 'ipaddress'
+	    ips_ip = 'ipaddress'
 
 # Get the stored credential from Splunk
 
