@@ -1,7 +1,5 @@
 #Welcome to the Splunk X-ARF Alert Script Project
 
-Please note you have been provided an early release of this project. It is subject to change. Do not share it outside your organization without contacting george@georgestarcher.com The materials, code, etc will be publicly released in conjunction with a talk on Alert Script Automation at the Splunk user conference .conf 2014. If you have any feedback, requests or bug reports please contact george@georgestarcher.com
-
 **All materials in this project are provided under the MIT software license. See license.txt for details.**
 
 [X-ARF is the Extended Abuse Reporting Format][1]. The provided search will enable you to trigger the alert script that generates and emails an abuse report for each matching events.
