@@ -1,19 +1,22 @@
-# Splunk Alert Script Template and Example
+# Splunk Alert Script Template and Examples
 
 ## Files:
 1. credentialsFromSplunk.py: a wrapper class to take a valid Splunk session key and retrieve a set of credentials saved within a specified Splunk app context
 2. targetlist.py: a class intended as an IP address list handler. Takes a path to Splunk alert results and extracts the first column assuming it is a list of IPv4 addresses
-3. gsheet.py: a home brew class for sending Splunk alert results to a defined google spreadsheet. You have to edit the expected columns in this class right now.
-4. alert_to_gsheet.py: an alert script called by a Splunk alert that uses the credentialsFromSplunk and gsheet classes.
+3. GoogleSpreadsheet/gsheet.py: a home brew class for sending Splunk alert results to a defined google spreadsheet. You have to edit the expected columns in this class right now.
+4. GoogleSpreadsheet/alert_to_gsheet.py: an alert script called by a Splunk alert that uses the credentialsFromSplunk and gsheet classes.
 5. alert_script.py: an example alert script that calls a placeholder IPS class as if you were controlling a network IPS via it's own Python class wrapper to Rest API calls.
+6. X-ARF Folder: all the files and docs for the X-ARF Abuse email report alert scripts.
 
 ## Summary:
 
 The combination of the credentialsFromSplunk.py, gsheet.py and alert_to_gsheet.py will function if properly configured with Splunk. It is meant as a demonstration of sending Splunk alert detail data to a system external to Splunk.
 
-The combination of the credentialsFromSplunk.py, targetlist.py and alert_script.py can work to control a network IPS if you provide the interfacing Python class to make the matching IPS Rest API calls. 
+The combination of the credentialsFromSplunk.py, targetlist.py, IPS/ips.py and alert_script.py can work to control a network IPS if you provide the interfacing Python class to make the matching IPS Rest API calls. 
 
-This code is meant to go along with the explanation on my personal blog at georgestarcher.com.
+The X-ARF abuse alert script content is all contained with it's own README in the X-ARF folder.
+
+This code is meant to go along with the explanation on my personal blog at georgestarcher.com and my Splunk 2014 .conf talk.
 
 ## Requirements:
 
@@ -32,7 +35,8 @@ This code is meant to go along with the explanation on my personal blog at georg
 * That you have written your own Python class wrapping REST API calls to your IPS matching what I in this script
 * Keep in mind this won't work on it's own, it is provided as an example. See point above
 * It and the credentialsFromSplunk.py and targetlist.py are expected to be placed together in the $SPLUNK_HOME/bin/scripts/ folder
-* Yo have created valid credentials within a Splunk app and edited the script variables appropriately for service user account name, the realm name etc that you used
+* You have created valid credentials within a Splunk app and edited the script variables appropriately for service user account name, the realm name etc that you used
+* Use the IPS/ips.py Python example class to see how one might call a REST API for an intrusion prevention applicance to quarantine the IP addresses
 
 ###BOTH alert scripts
 
@@ -40,3 +44,6 @@ This code is meant to go along with the explanation on my personal blog at georg
 * You may need to edit the path to the Splunk log folder for the path to write the optional debug file
 * If you want to use the debug change the debug flag to 1 from 0
 
+###X-ARF
+
+* Review the README.md in the X-ARF for the abuse reporting scripts and explanation
