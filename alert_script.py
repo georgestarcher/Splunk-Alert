@@ -115,7 +115,8 @@ if __name__ == "__main__":
 	        logError("IPS Error: %s" % str(e))
 		exitAlertScript(_SYS_EXIT_FAILED_IPS)	
 
-# Obtain the path to the alert events compressed file
+# Obtain the path to the alert events compressed file and load the search results to the list
+
 
         alertEventsFile = os.environ['SPLUNK_ARG_8']
 
