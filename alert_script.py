@@ -94,7 +94,7 @@ if __name__ == "__main__":
         logDebug("sessionKey="+sessionKey)
         logDebug("splunkVersion="+splunkVersion)
 
-# Define the tipping point connection
+# Define the ips connection
 
         ipsCredential = credential(splunkapp,realm,username)
         policy_name = "Quarantine SSH Attempts"
