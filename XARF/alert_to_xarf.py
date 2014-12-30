@@ -159,6 +159,7 @@ if __name__ == "__main__":
                 try:
                        for abuseEvent in alertAbuseList.abuselist:
                            search_query = abuseEvent.getEvidence(_alertScriptServiceAccount,sessionKey)
+                           logDebug("evidence_search_query=%s" % search_query)
                            logDebug("evidence=%s " % str(abuseEvent.evidence))
                 except Exception, e:
                         logError("type=GetEvidenceError error=%s" % str(e))
