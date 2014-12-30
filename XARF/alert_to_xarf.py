@@ -96,7 +96,7 @@ def getSplunkVersion(sessionKey):
 	return(version)
 
 def getSplunkUser(sessionKey):
-        """ function to obtain the Splunk software version. This is used to determine parsing of the sessionKey """
+        """ function to obtain the Splunk user account executing the alert script. This is used for the evidence search. """
 
         from xml.dom import minidom
 
