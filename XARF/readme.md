@@ -26,7 +26,7 @@ The current version of this code obtains the mail gateway settings from Splunk's
 You must change the following in the script alert_to_xarf.py.
 
 ###_alertScriptServiceAccount:
-Fill in the Splunk Username that the driving alert search/script will be scheduled to run under. I typically use a "service account" for alerts so I do not have to worry about ownership of Splunk knowledge objects when staff leaves the company. I will add code in the future to automatically determine the user account name that triggered the script and use it.
+Fill in the Splunk Username that the driving alert search/script will be scheduled to run under. I typically use a "service account" for alerts so I do not have to worry about ownership of Splunk knowledge objects when staff leaves the company. The code obtains the account name that runs the alert automatically via the getSplunkUser method. I recommend the Timezone setting on the Splunk service account running this code be set to GMT London. Otherwise Timezone differences can cause the evidence attachment search to miss the log events. This will send alerts without the evidence attached. 
 
 ###xArfReportedFrom:
 You must set this value to be the email address you wish the abuse reports to be sent "from." This may be your own abuse contact email so you can receive valid resolution replies. Or you might consider a no reply address if you never wish to see valid replies, email delivery failure notices, etc. You may control having outgoing abuse reports CC'd to your reportedFrom address by XYZ.
