@@ -50,7 +50,7 @@ xArfReportType = "login-attack"
 xArfCategory = "auth"
 xArfAttachment = "text/plain"
 xArfUserAgent = "X-ARF Reporting"
-xArfSchemeURL = "http://www.x-arf.org/schema/abuse_login-attack_0.1.0.json"
+xArfSchemaURL = "http://www.x-arf.org/schema/abuse_login-attack_0.1.0.json"
 xArfPort = "22"
 xArfSourceType = "ipv4"
 xArfVersion = "0.2"
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 		       emailXARFQueue.jsonReport['Attachment'] = xArfAttachment 
 		       emailXARFQueue.jsonReport['TLP'] = xArfTLP
 		       emailXARFQueue.jsonReport['Version'] = xArfVersion
-		       emailXARFQueue.jsonReport['Scheme-URL'] = xArfSchemeURL 
+		       emailXARFQueue.jsonReport['Schema-URL'] = xArfSchemaURL 
                        emailXARFQueue.evidence = abuseEvent.evidence
               	       emailXARFQueue.sendEmail()
 		       actionNotification = "reportID="+xArfReportID+" app="+abuseEvent.app+" category="+xArfCategory+" src_ip="+abuseEvent.source+" abuseContact="+abuseEvent.contact+" dest_ip="+abuseEvent.target+" occurences="+abuseEvent.count
