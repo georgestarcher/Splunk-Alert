@@ -62,150 +62,150 @@ mail_template = os.path.join(os.environ['SPLUNK_HOME'],'bin','scripts','template
 # Functions
 
 def versiontuple(v):
-        return tuple(map(int, (v.split("."))))
+    return tuple(map(int, (v.split("."))))
 
 def logDebug(s):
-	""" print any extra debug info """
-	if _DEBUG:
-		logger.info("script="+_MI_APP_NAME+" %s" % str(s))
+    """ print any extra debug info """
+    if _DEBUG:
+        logger.info("script="+_MI_APP_NAME+" %s" % str(s))
     
 def logError(s):
-	""" print any errors that occur """
-	logger.error("script="+_MI_APP_NAME+" %s" % str(s))
+    """ print any errors that occur """
+    logger.error("script="+_MI_APP_NAME+" %s" % str(s))
 
 def logAction(s):
-	""" log events to show normal activity of the alert script """
-	if _LOG_ACTION:
-		logger.info("script="+_MI_APP_NAME+" %s" % str(s))
+    """ log events to show normal activity of the alert script """
+    if _LOG_ACTION:
+        logger.info("script="+_MI_APP_NAME+" %s" % str(s))
 
 def getSplunkVersion(sessionKey):
-	""" function to obtain the Splunk software version. This is used to determine parsing of the sessionKey """
+    """ function to obtain the Splunk software version. This is used to determine parsing of the sessionKey """
 
-	from xml.dom import minidom
+    from xml.dom import minidom
 
-	base_url = 'https://localhost:8089'
+    base_url = 'https://localhost:8089'
 
-	request = urllib2.Request(base_url + '/services/server/info',None,headers = { 'Authorization': ('Splunk %s' %sessionKey)})
-	server_content = urllib2.urlopen(request)
-	serverDoc = minidom.parseString(server_content.read())
-	entryInfo = serverDoc.getElementsByTagName('entry')
-	key_nodes = entryInfo[0].getElementsByTagName('content')[0].getElementsByTagName('s:key')
-	nodes = filter(lambda node: node.attributes['name'].value == 'version', key_nodes)
-	version = nodes[0].firstChild.nodeValue
+    request = urllib2.Request(base_url + '/services/server/info',None,headers = { 'Authorization': ('Splunk %s' %sessionKey)})
+    server_content = urllib2.urlopen(request)
+    serverDoc = minidom.parseString(server_content.read())
+    entryInfo = serverDoc.getElementsByTagName('entry')
+    key_nodes = entryInfo[0].getElementsByTagName('content')[0].getElementsByTagName('s:key')
+    nodes = filter(lambda node: node.attributes['name'].value == 'version', key_nodes)
+    version = nodes[0].firstChild.nodeValue
 
-	return(version)
+    return(version)
 
 def getSplunkUser(sessionKey):
-        """ function to obtain the Splunk user account executing the alert script. This is used for the evidence search. """
+    """ function to obtain the Splunk user account executing the alert script. This is used for the evidence search. """
 
-        from xml.dom import minidom
+    from xml.dom import minidom
 
-        base_url = 'https://localhost:8089'
+    base_url = 'https://localhost:8089'
 
-        request = urllib2.Request(base_url + '/services/authentication/current-context',None,headers = { 'Authorization': ('Splunk %s' %sessionKey)})
-        server_content = urllib2.urlopen(request)
-        serverDoc = minidom.parseString(server_content.read())
-        entryInfo = serverDoc.getElementsByTagName('entry')
-        key_nodes = entryInfo[0].getElementsByTagName('content')[0].getElementsByTagName('s:key')
-        nodes = filter(lambda node: node.attributes['name'].value == 'username', key_nodes)
-        username = nodes[0].firstChild.nodeValue
+    request = urllib2.Request(base_url + '/services/authentication/current-context',None,headers = { 'Authorization': ('Splunk %s' %sessionKey)})
+    server_content = urllib2.urlopen(request)
+    serverDoc = minidom.parseString(server_content.read())
+    entryInfo = serverDoc.getElementsByTagName('entry')
+    key_nodes = entryInfo[0].getElementsByTagName('content')[0].getElementsByTagName('s:key')
+    nodes = filter(lambda node: node.attributes['name'].value == 'username', key_nodes)
+    username = nodes[0].firstChild.nodeValue
 
-        return(username)
+    return(username)
 
 def exitAlertScript(a):
-	if _DEBUG:
-		logDebug("action=stopped")
-	sys.exit(a)
+    if _DEBUG:
+        logDebug("action=stopped")
+    sys.exit(a)
 
 if __name__ == "__main__":
 
-	if _DEBUG:
-		logDebug("action=started")
+    if _DEBUG:
+        logDebug("action=started")
 
-# Obtain the Splunk authentication session key
+    # Obtain the Splunk authentication session key
 
-        # read session key sent from splunkd 
-	sessionKey = sys.stdin.readline().strip()
+    # read session key sent from splunkd 
+    sessionKey = sys.stdin.readline().strip()
 
-	if len(sessionKey) == 0:
-        	logError("Did not receive a session key from splunkd. ")
-	        exitAlertScript(_SYS_EXIT_FAILED_SPLUNK_AUTH)
+    if len(sessionKey) == 0:
+        logError("Did not receive a session key from splunkd. ")
+        exitAlertScript(_SYS_EXIT_FAILED_SPLUNK_AUTH)
 
-# Adjust the returned sessionKey text based on Splunk version
+    # Adjust the returned sessionKey text based on Splunk version
 
-	splunkVersion = getSplunkVersion(sessionKey)
+    splunkVersion = getSplunkVersion(sessionKey)
 
-	if versiontuple(splunkVersion) < versiontuple("6.1.1"):
-		sessionKey = sessionKey[11:]
-	else:
-		sessionKey = urllib.unquote(sessionKey[11:]).decode('utf8')	
+    if versiontuple(splunkVersion) < versiontuple("6.1.1"):
+        sessionKey = sessionKey[11:]
+    else:
+        sessionKey = urllib.unquote(sessionKey[11:]).decode('utf8') 
 
-	logDebug("sessionKey="+sessionKey)
-	logDebug("splunkVersion="+splunkVersion)
+    logDebug("sessionKey="+sessionKey)
+    logDebug("splunkVersion="+splunkVersion)
 
-# Obtain the alert events, then the optional evidence sample for each alert result row 
+    # Obtain the alert events, then the optional evidence sample for each alert result row 
 
-        alertEventsFile = os.environ['SPLUNK_ARG_8']
+    alertEventsFile = os.environ['SPLUNK_ARG_8']
 
+    try:
+        alertAbuseList = abuseList(alertEventsFile)
+    except Exception, e:
+        logError("type=AlertFileError error=%s" % str(e))
+        exitAlertScript(_SYS_EXIT_FAILED_ALERT_FILE)
+
+    if xArfAttachment=="text/plain":
+        logDebug("action=FetchEvidence")
+        _alertScriptServiceAccount = getSplunkUser(sessionKey)
         try:
-                alertAbuseList = abuseList(alertEventsFile)
+            for abuseEvent in alertAbuseList.abuselist:
+                search_query = abuseEvent.getEvidence(_alertScriptServiceAccount,sessionKey)
+                logDebug("evidence_search_query=%s" % search_query)
+                logDebug("evidence=%s " % str(abuseEvent.evidence))
         except Exception, e:
-                logError("type=AlertFileError error=%s" % str(e))
-                exitAlertScript(_SYS_EXIT_FAILED_ALERT_FILE)
+            logError("type=GetEvidenceError error=%s" % str(e))
 
-        if xArfAttachment=="text/plain":
-	        logDebug("action=FetchEvidence")
-            _alertScriptServiceAccount = getSplunkUser(sessionKey)
-                try:
-                       for abuseEvent in alertAbuseList.abuselist:
-                           search_query = abuseEvent.getEvidence(_alertScriptServiceAccount,sessionKey)
-                           logDebug("evidence_search_query=%s" % search_query)
-                           logDebug("evidence=%s " % str(abuseEvent.evidence))
-                except Exception, e:
-                        logError("type=GetEvidenceError error=%s" % str(e))
+    # Send abuse email for each row in the alert results table
+    try:
+        emailXARFQueue = emailSplunk(sessionKey)
+        emailBodyTemplate = Template(filename=mail_template)
+    except Exception, e:
+        logError("type=SplunkMailInitializationError error=%s" % str(e))
+        exitAlertScript(_SYS_EXIT_SPLUNK_EMAIL)
 
-# Send abuse email for each row in the alert results table
-	try:
-                emailXARFQueue = emailSplunk(sessionKey)
-                emailBodyTemplate = Template(filename=mail_template)
+    for abuseEvent in alertAbuseList.abuselist:
+        try:
+            emailXARFQueue.humanPart = MIMEText(emailBodyTemplate.render(startTime=abuseEvent.startTime, endTime=abuseEvent.endTime, numUsers=abuseEvent.numUsers, ip=abuseEvent.source, sourcename=abuseEvent.sourceName, city=abuseEvent.city, region=abuseEvent.region, country=abuseEvent.country, count=abuseEvent.count, users=abuseEvent.users, service=abuseEvent.app, target=abuseEvent.target))
+            emailXARFQueue.message['Subject'] = "abuse report about "+abuseEvent.source+" - "+abuseEvent.startTime
+            emailXARFQueue.message['From'] =  xArfReportedFrom
+            emailXARFQueue.message['To'] = abuseEvent.contact
+            emailXARFQueue.message['Cc'] = xArfReportCC
+            emailXARFQueue.message.add_header('X-ARF','YES')
+            emailXARFQueue.message.add_header('Auto-Submitted', 'auto-generated')
+            emailXARFQueue.message.add_header('X-XARF', xArfType)
+            emailXARFQueue.jsonReport['Reported-From'] = xArfReportedFrom
+            emailXARFQueue.jsonReport['Report-ID'] = xArfReportID 
+            emailXARFQueue.jsonReport['Date'] = abuseEvent.endTime
+            emailXARFQueue.jsonReport['Report-Type'] = xArfReportType
+            emailXARFQueue.jsonReport['Category'] = xArfCategory
+            emailXARFQueue.jsonReport['Service'] = abuseEvent.app
+            emailXARFQueue.jsonReport['User-Agent'] = xArfUserAgent 
+            emailXARFQueue.jsonReport['Source'] = abuseEvent.source
+            emailXARFQueue.jsonReport['Source-Type'] = xArfSourceType 
+            emailXARFQueue.jsonReport['Port'] = xArfPort
+            emailXARFQueue.jsonReport['Occurences'] = abuseEvent.count
+            emailXARFQueue.jsonReport['Attachment'] = xArfAttachment 
+            emailXARFQueue.jsonReport['TLP'] = xArfTLP
+            emailXARFQueue.jsonReport['Version'] = xArfVersion
+            emailXARFQueue.jsonReport['Schema-URL'] = xArfSchemaURL 
+            emailXARFQueue.evidence = abuseEvent.evidence
+            emailXARFQueue.sendEmail()
+            actionNotification = "reportID="+xArfReportID+" app="+abuseEvent.app+" category="+xArfCategory+" src_ip="+abuseEvent.source+" abuseContact="+abuseEvent.contact+" dest_ip="+abuseEvent.target+" occurences="+abuseEvent.count
+            logAction("action=sent %s" % str(actionNotification))
+            emailXARFQueue.resetMessage()
         except Exception, e:
-                logError("type=SplunkMailInitializationError error=%s" % str(e))
-                exitAlertScript(_SYS_EXIT_SPLUNK_EMAIL)
-
-        for abuseEvent in alertAbuseList.abuselist:
-                try:
-                       emailXARFQueue.humanPart = MIMEText(emailBodyTemplate.render(startTime=abuseEvent.startTime, endTime=abuseEvent.endTime, numUsers=abuseEvent.numUsers, ip=abuseEvent.source, sourcename=abuseEvent.sourceName, city=abuseEvent.city, region=abuseEvent.region, country=abuseEvent.country, count=abuseEvent.count, users=abuseEvent.users, service=abuseEvent.app, target=abuseEvent.target))
-		       emailXARFQueue.message['Subject'] = "abuse report about "+abuseEvent.source+" - "+abuseEvent.startTime
-                       emailXARFQueue.message['From'] =  xArfReportedFrom
-                       emailXARFQueue.message['To'] = abuseEvent.contact
-		       emailXARFQueue.message['Cc'] = xArfReportCC
-		       emailXARFQueue.message.add_header('X-ARF','YES')
-		       emailXARFQueue.message.add_header('Auto-Submitted', 'auto-generated')
-		       emailXARFQueue.message.add_header('X-XARF', xArfType)
-		       emailXARFQueue.jsonReport['Reported-From'] = xArfReportedFrom
-		       emailXARFQueue.jsonReport['Report-ID'] = xArfReportID 
-		       emailXARFQueue.jsonReport['Date'] = abuseEvent.endTime
-		       emailXARFQueue.jsonReport['Report-Type'] = xArfReportType
-		       emailXARFQueue.jsonReport['Category'] = xArfCategory
-		       emailXARFQueue.jsonReport['Service'] = abuseEvent.app
-		       emailXARFQueue.jsonReport['User-Agent'] = xArfUserAgent 
-		       emailXARFQueue.jsonReport['Source'] = abuseEvent.source
-		       emailXARFQueue.jsonReport['Source-Type'] = xArfSourceType 
-                       emailXARFQueue.jsonReport['Port'] = xArfPort
-		       emailXARFQueue.jsonReport['Occurences'] = abuseEvent.count
-		       emailXARFQueue.jsonReport['Attachment'] = xArfAttachment 
-		       emailXARFQueue.jsonReport['TLP'] = xArfTLP
-		       emailXARFQueue.jsonReport['Version'] = xArfVersion
-		       emailXARFQueue.jsonReport['Schema-URL'] = xArfSchemaURL 
-                       emailXARFQueue.evidence = abuseEvent.evidence
-              	       emailXARFQueue.sendEmail()
-		       actionNotification = "reportID="+xArfReportID+" app="+abuseEvent.app+" category="+xArfCategory+" src_ip="+abuseEvent.source+" abuseContact="+abuseEvent.contact+" dest_ip="+abuseEvent.target+" occurences="+abuseEvent.count
-		       logAction("action=sent %s" % str(actionNotification))
-		       emailXARFQueue.resetMessage()
-                except Exception, e:
-                        logError("type=SplunkMailError error=%s" % str(e))
-                        exitAlertScript(_SYS_EXIT_SPLUNK_EMAIL)
+            logError("type=SplunkMailError error=%s" % str(e))
+            exitAlertScript(_SYS_EXIT_SPLUNK_EMAIL)
 
 
-	exitAlertScript(0)
+    exitAlertScript(0)
 
