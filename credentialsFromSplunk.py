@@ -43,10 +43,10 @@ class credential:
         except Exception, e:
             raise Exception, "Could not get %s credentials from splunk. Error: %s" % (self.app, str(e))
 
-            for i, c in entities.items():
-                    if (c['realm'] == self.realm and c['username'] == self.username):
-                        self.password = c['clear_password']
-                        return
+        for i, c in entities.items():
+            if (c['realm'] == self.realm and c['username'] == self.username):
+                self.password = c['clear_password']
+                return
 
         raise Exception, "No credentials have been found"
 
