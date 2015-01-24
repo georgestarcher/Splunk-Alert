@@ -109,15 +109,15 @@ class emailSplunk:
                 jsonReportPart.add_header('name','report.txt')
             self.message.attach(jsonReportPart)         
         if (self.evidence):
-                evidenceReport = ""
-                for line in self.evidence:
-                    evidenceReport= evidenceReport + "%s\n" %(line)
-                    evidenceReportPart = email.mime.Text.MIMEText("")
-                    evidenceReportPart.set_payload(evidenceReport)
-                    evidenceReportPart.set_charset('utf8')
-                    evidenceReportPart.set_type('text/plain')
-                    evidenceReportPart.add_header('name','evidence.txt')
-                self.message.attach(evidenceReportPart)
+            evidenceReport = ""
+            for line in self.evidence:
+                evidenceReport= evidenceReport + "%s\n" %(line)
+                evidenceReportPart = email.mime.Text.MIMEText("")
+                evidenceReportPart.set_payload(evidenceReport)
+                evidenceReportPart.set_charset('utf8')
+                evidenceReportPart.set_type('text/plain')
+                evidenceReportPart.add_header('name','evidence.txt')
+            self.message.attach(evidenceReportPart)
 
         try:
             smtp = smtplib.SMTP(self.server)
