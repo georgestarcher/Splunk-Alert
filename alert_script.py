@@ -62,6 +62,14 @@ def getSplunkVersion(sessionKey):
     version = nodes[0].firstChild.nodeValue
 
     return(version)
+
+
+def exitAlertScript(a):
+    if _DEBUG:
+        logDebug("Stopping: "+_MI_APP_NAME)
+
+    outputFileAction.close()
+    sys.exit(a)
     
 if __name__ == "__main__":
 
